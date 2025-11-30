@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
 import ProductCard from "../components/ProductCard";
 import Filters from "../components/Filters";
+import api from "../services/api";
 
 export default function Products() {
   const [items, setItems] = useState([]);

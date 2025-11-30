@@ -4,16 +4,40 @@ import api from "../services/api";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // loading for initial fetch
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Helper: persist user to localStorage
+  const persistUser = (u) => {
+    setUser(u ?? null);
+    try {
+      if (u) {
+        localStorage.setItem("user", JSON.stringify(u));
+      } else {
+        localStorage.removeItem("user");
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  };
 
   // Fetch current user on mount (cookie-based session)
   const loadUser = async () => {
     try {
       const { data } = await api.get("/auth/user");
-      setUser(data); // backend should return full user object
-    } catch {
-      setUser(null);
+      console.debug("Fetched user (auth/user):", data);
+      const u = data?.user ?? data;
+      persistUser(u);
+    } catch (err) {
+      console.warn("Failed to fetch user:", err);
+      persistUser(null);
     } finally {
       setLoading(false);
     }
@@ -26,8 +50,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, guestItems = []) => {
     try {
       const { data } = await api.post("/auth/login", { email, password, guestItems });
-      setUser(data.user); // consistent shape
-      return data.user;
+      console.debug("Login response:", data);
+      const u = data?.user ?? data;
+      persistUser(u);
+      return u;
     } catch (err) {
       throw err.response?.data || err;
     }
@@ -36,8 +62,10 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       const { data } = await api.post("/auth/register", { name, email, password });
-      setUser(data.user);
-      return data.user;
+      console.debug("Register response:", data);
+      const u = data?.user ?? data;
+      persistUser(u);
+      return u;
     } catch (err) {
       throw err.response?.data || err;
     }
@@ -49,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.warn("Logout failed:", err);
     }
-    setUser(null);
+    persistUser(null);
   };
 
   return (

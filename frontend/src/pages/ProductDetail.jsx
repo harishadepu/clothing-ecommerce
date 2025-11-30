@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import api from "../services/api";
 import { CartContext } from "../context/CartContext";
 
+
+
 export default function ProductDetail() {
   const { id } = useParams();
   const [p, setP] = useState(null);

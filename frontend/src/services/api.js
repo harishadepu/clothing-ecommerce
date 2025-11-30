@@ -1,9 +1,10 @@
 import axios from "axios";
 
+// Create a dedicated Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ,
-  withCredentials: true, // required for cookies
-  timeout: 15000, // avoid Render cold-start long hangs
+  baseURL: import.meta.env.VITE_API_URL, // ✅ correct key
+  withCredentials: true,                 // ✅ ensures cookies are sent
+  timeout: 15000,                        // avoid Render cold-start long hangs
 });
 
 // --- OPTIONAL BUT HIGHLY RECOMMENDED ---

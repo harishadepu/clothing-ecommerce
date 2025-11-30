@@ -27,11 +27,12 @@ export const register = async (req, res, next) => {
     const token = signToken(user);
 
     const cookieOptions = {
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production", // ✅ must be true on Render
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          httpOnly:true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production"? "none":"strict",
+          maxAge: 24 * 60 * 60 * 1000
    };
+   console.log(token)
    res.cookie("token", token, cookieOptions);
 
     user = user.toObject();
@@ -45,7 +46,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password, guestItems } = req.body;
+    const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
@@ -55,10 +56,10 @@ export const login = async (req, res, next) => {
 
     const token = signToken(user);
     const cookieOptions = {
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production", // ✅ must be true on Render
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          httpOnly:true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production"? "none":"strict",
+          maxAge: 24 * 60 * 60 * 1000
    };
    res.cookie("token", token, cookieOptions);
 

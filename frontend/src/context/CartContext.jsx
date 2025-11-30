@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api";
 import { AuthContext } from "./AuthContext";
+import api from "../services/api";
 
 export const CartContext = createContext();
 
@@ -49,6 +49,7 @@ export const CartProvider = ({ children }) => {
   // Add item to cart
   //
   const add = async (productId, size, qty = 1) => {
+    console.log("Adding to cart:", { productId, size, qty });
     if (!user) return;
 
     // Optimistic UI update

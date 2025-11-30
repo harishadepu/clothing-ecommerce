@@ -1,8 +1,8 @@
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
-import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
+import api from "../services/api";
 
 export default function Checkout() {
   const { items, syncServerCart } = useContext(CartContext);

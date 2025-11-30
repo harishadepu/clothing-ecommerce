@@ -19,7 +19,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <Navbar />
+          <ProtectedRoute><Navbar /></ProtectedRoute>
           <Routes>
             <Route path="/login" element={<LoginPage/>}/>
             <Route path="/register" element={<RegisterPage/>}/>
