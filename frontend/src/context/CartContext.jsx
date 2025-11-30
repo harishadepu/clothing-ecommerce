@@ -5,116 +5,122 @@ import { AuthContext } from "./AuthContext";
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  // Cart items state (always synced with backend)
   const [items, setItems] = useState([]);
   const { user } = useContext(AuthContext);
 
   //
-  // 🔄 Sync cart from backend whenever user logs in
+  // Normalize backend cart shape into frontend shape
+  //
+  const normalizeCart = (dataItems) => {
+    if (!Array.isArray(dataItems)) return [];
+
+    return dataItems.map((i) => {
+      const prod = i.product || {};
+
+      const productId = prod._id
+        ? String(prod._id)
+        : i.product?._id
+        ? String(i.product._id)
+        : String(i.product);
+
+      return {
+        productId,
+        name: prod.name ?? i.name ?? "",
+        image: prod.image ?? i.image ?? "",
+        price: prod.price ?? i.price ?? 0,
+        size: i.size,
+        qty: i.qty,
+      };
+    });
+  };
+
+  //
+  // Fetch cart when user logs in
   //
   useEffect(() => {
     if (user) {
       syncServerCart();
     } else {
-      setItems([]); // clear cart if user logs out
+      setItems([]);
     }
   }, [user]);
 
-
-  // Add item to cart (calls backend)
-
+  //
+  // Add item to cart
+  //
   const add = async (productId, size, qty = 1) => {
-  if (!user) return;
+    if (!user) return;
 
-  // Optimistic update: check if item already exists in local state
-  setItems(prevItems => {
-    const idx = prevItems.findIndex(
-      i => i.productId === productId && i.size === size
-    );
-    if (idx >= 0) {
-      const updated = [...prevItems];
-      updated[idx].qty += qty;
-      return updated;
-    }
-    return [...prevItems, { productId, size, qty }];
-  });
+    // Optimistic UI update
+    setItems((prev) => {
+      const idx = prev.findIndex(
+        (i) => i.productId === productId && i.size === size
+      );
 
-  // Sync with backend
-  const { data } = await api.post("/cart/add", { productId, size, qty });
-    setItems(
-      data.items.map((i) => {
-        // Support both populated product objects and raw product id values
-        const prod = i.product || {};
-        const productId = prod._id ? String(prod._id) : String(prod);
-        const name = prod.name ?? i.name ?? "";
-        const image = prod.image ?? i.image ?? "";
-        const price = (prod.price ?? i.price) ?? 0;
-        return { productId, name, image, price, size: i.size, qty: i.qty };
-      })
-    );
-};
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], qty: updated[idx].qty + qty };
+        return updated;
+      }
+
+      return [...prev, { productId, size, qty }];
+    });
+
+    // Sync with backend
+    const { data } = await api.post("/cart/add", { productId, size, qty });
+    setItems(normalizeCart(data.items));
+  };
 
   //
-  // ✏️ Update item quantity
+  // Update quantity
   //
   const update = async (productId, size, qty) => {
     if (!user) return;
-    const { data } = await api.put("/cart/update", { productId, size, qty });
-    setItems(
-      data.items.map((i) => {
-        const prod = i.product || {};
-        const productId = prod._id ? String(prod._id) : String(prod);
-        const name = prod.name ?? i.name ?? "";
-        const image = prod.image ?? i.image ?? "";
-        const price = (prod.price ?? i.price) ?? 0;
-        return { productId, name, image, price, size: i.size, qty: i.qty };
-      })
-    );
+
+    const { data } = await api.put("/cart/update", {
+      productId,
+      size,
+      qty,
+    });
+
+    setItems(normalizeCart(data.items));
   };
 
   //
-  // ❌ Remove item from cart
+  // Remove item
   //
   const remove = async (productId, size) => {
-    console.log("Removing item:", productId, size);
     if (!user) return;
-    // Axios DELETE expects request body in the `data` property of the config
-    const { data } = await api.delete("/cart/remove", { data: { productId, size } });
-    console.log("Remove response data:", data);
-    setItems(
-      data.items.map((i) => {
-        const prod = i.product || {};
-        const productId = prod._id ? String(prod._id) : String(prod);
-        const name = prod.name ?? i.name ?? "";
-        const image = prod.image ?? i.image ?? "";
-        const price = (prod.price ?? i.price) ?? 0;
-        return { productId, name, image, price, size: i.size, qty: i.qty };
-      })
-    );
+
+    const { data } = await api.delete("/cart/remove", {
+      data: { productId, size },
+    });
+
+    setItems(normalizeCart(data.items));
   };
-  
 
   //
-  // 📦 Fetch cart from backend
+  // Fetch latest cart from server
   //
   const syncServerCart = async () => {
     if (!user) return;
+
     const { data } = await api.get("/cart");
+
     setItems(
-      data.items.map(i => ({
-        productId: i.product._id,
-        name: i.product.name,
-        image: i.product.image,
-        price: i.product.price,
-        size: i.size,
-        qty: i.qty,
-      }))
+      normalizeCart(data.items || [])
     );
   };
 
   return (
     <CartContext.Provider
-      value={{ items, add, update, remove, syncServerCart }}
+      value={{
+        items,
+        add,
+        update,
+        remove,
+        syncServerCart,
+      }}
     >
       {children}
     </CartContext.Provider>
