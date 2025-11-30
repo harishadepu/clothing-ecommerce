@@ -4,9 +4,9 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import authRoutes from "./routes/authRoutes.js";
-import productRoutes from './routes/productRoutes.js';
-import cartRoutes from './routes/cartRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
+import productRoutes from './routes/productRoutes.js";
+import cartRoutes from './routes/cartRoutes.js";
+import orderRoutes from './routes/orderRoutes.js";
 
 dotenv.config();
 await connectDB();
@@ -15,14 +15,27 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
+// ✅ Allowed origins
+const allowedOrigins = [
+  "http://localhost:5173", // dev
+  "https://clothing-ecommerce-bice.vercel.app", // production
+];
+
+// ✅ CORS middleware
 app.use(cors({
-  credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // only needed if you plan to use cookies
 }));
 
-
-app.get("/",(req,res)=>{
-  res.send("welcome to ecommers")
-})
+app.get("/", (req, res) => {
+  res.send("welcome to ecommerce");
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
