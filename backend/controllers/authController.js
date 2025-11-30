@@ -1,9 +1,7 @@
-// backend/src/controllers/auth.controller.js
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Cart from '../models/Cart.js';
-
 
 const signToken = (user) =>
   jwt.sign(
@@ -26,19 +24,11 @@ export const register = async (req, res, next) => {
 
     const token = signToken(user);
 
-    const cookieOptions = {
-          httpOnly:true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production"? "none":"strict",
-          maxAge: 24 * 60 * 60 * 1000
-   };
-   console.log(token)
-   res.cookie("token", token, cookieOptions);
-
     user = user.toObject();
     delete user.password;
 
-    res.status(201).json({ success: true, user });
+    // ✅ return token in JSON instead of cookie
+    res.status(201).json({ success: true, user, token });
   } catch (e) {
     next(e);
   }
@@ -55,25 +45,19 @@ export const login = async (req, res, next) => {
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = signToken(user);
-    const cookieOptions = {
-          httpOnly:true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production"? "none":"strict",
-          maxAge: 24 * 60 * 60 * 1000
-   };
-   res.cookie("token", token, cookieOptions);
 
     const safeUser = user.toObject();
     delete safeUser.password;
 
-    res.json({ success: true, user: safeUser });
+    // ✅ return token in JSON instead of cookie
+    res.json({ success: true, user: safeUser, token });
   } catch (e) {
     next(e);
   }
 };
 
 export const logout = (req, res) => {
-  res.clearCookie("token");
+  // ✅ nothing to clear, just respond
   res.json({ ok: true });
 };
 

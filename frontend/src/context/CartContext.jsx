@@ -8,15 +8,11 @@ export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const { user } = useContext(AuthContext);
 
-  //
   // Normalize backend cart shape into frontend shape
-  //
   const normalizeCart = (dataItems) => {
     if (!Array.isArray(dataItems)) return [];
-
     return dataItems.map((i) => {
       const prod = i.product || {};
-
       const productId = prod._id
         ? String(prod._id)
         : i.product?._id
@@ -34,9 +30,7 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  //
   // Fetch cart when user logs in
-  //
   useEffect(() => {
     if (user) {
       syncServerCart();
@@ -45,11 +39,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [user]);
 
-  //
-  // Add item to cart
-  //
   const add = async (productId, size, qty = 1) => {
-    console.log("Adding to cart:", { productId, size, qty });
     if (!user) return;
 
     // Optimistic UI update
@@ -57,60 +47,53 @@ export const CartProvider = ({ children }) => {
       const idx = prev.findIndex(
         (i) => i.productId === productId && i.size === size
       );
-
       if (idx >= 0) {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], qty: updated[idx].qty + qty };
         return updated;
       }
-
       return [...prev, { productId, size, qty }];
     });
 
-    // Sync with backend
-    const { data } = await api.post("/cart/add", { productId, size, qty });
-    setItems(normalizeCart(data.items));
+    try {
+      const { data } = await api.post("/cart/add", { productId, size, qty });
+      setItems(normalizeCart(data.items));
+    } catch (err) {
+      console.error("Failed to sync add:", err);
+    }
   };
 
-  //
-  // Update quantity
-  //
   const update = async (productId, size, qty) => {
     if (!user) return;
-
-    const { data } = await api.put("/cart/update", {
-      productId,
-      size,
-      qty,
-    });
-
-    setItems(normalizeCart(data.items));
+    try {
+      const { data } = await api.put("/cart/update", { productId, size, qty });
+      setItems(normalizeCart(data.items));
+    } catch (err) {
+      console.error("Failed to update cart:", err);
+    }
   };
 
-  //
-  // Remove item
-  //
   const remove = async (productId, size) => {
     if (!user) return;
-
-    const { data } = await api.delete("/cart/remove", {
-      data: { productId, size },
-    });
-
-    setItems(normalizeCart(data.items));
+    try {
+      const { data } = await api.delete("/cart/remove", {
+        data: { productId, size },
+      });
+      setItems(normalizeCart(data.items));
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+    }
   };
 
-  //
-  // Fetch latest cart from server
-  //
   const syncServerCart = async () => {
     if (!user) return;
-
-    const { data } = await api.get("/cart");
-
-    setItems(
-      normalizeCart(data.items || [])
-    );
+    try {
+      const { data } = await api.get("/cart");
+      setItems(normalizeCart(data.items || []));
+    } catch (err) {
+      console.error("Failed to sync cart:", err);
+      setItems([]);
+    }
   };
 
   return (

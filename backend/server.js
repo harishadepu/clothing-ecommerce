@@ -16,7 +16,6 @@ app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
 app.use(cors({
-  origin: "clothing-ecommerce-bice.vercel.app",
   credentials: true,
 }));
 
