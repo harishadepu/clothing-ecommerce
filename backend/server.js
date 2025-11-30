@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from './routes/productRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import debugRoutes from './routes/debugRoutes.js';
 
 dotenv.config();
 await connectDB();
@@ -29,6 +30,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Centralized error handler
 app.use((err, req, res, next) => {
