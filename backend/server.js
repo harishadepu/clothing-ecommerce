@@ -14,11 +14,21 @@ await connectDB();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+<<<<<<< HEAD
 
 const allowedOrigins = [
   'http://localhost:5173']
 
 app.use(cors({ origin: allowedOrigins,
+=======
+const allowedOrigins = [
+  "http://localhost:5173", // dev
+  "https://clothing-ecommerce-bice.vercel.app", // ✅ your deployed frontend
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+>>>>>>> 8f03c907a8f0b604b988835a6c05994cc60b4594
   credentials: true,
 }));
 
