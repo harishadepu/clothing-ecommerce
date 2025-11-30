@@ -14,12 +14,14 @@ await connectDB();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
-app.use(cors({
-  origin: 'http://localhost:5173',
+
+const allowedOrigins = [
+  'http://localhost:5173']
+
+app.use(cors({ origin: allowedOrigins,
   credentials: true,
 }));
 
-app.get('/api/health', (_, res) => res.json({ ok: true }));
 
 app.get("/",(req,res)=>{
   res.send("welcome to ecommers")
