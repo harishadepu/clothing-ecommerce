@@ -12,7 +12,7 @@ export const register = async (req, res, next) => {
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ name, email, password: hash });
     await Cart.create({ user: user._id, items: [] });
-    res.status(201).json({ id: user._id, name: user.name, email: user.email });
+    res.status(201).json({ success:true, user });
   } catch (e) { next(e); }
 };
 
@@ -36,7 +36,7 @@ export const login = async (req, res, next) => {
       secure: process.env.NODE_ENV === 'production',
     };
     res.cookie('token', token, cookieOptions);
-    res.json({ id: user._id, name: user.name, email: user.email });
+    res.json({ success:true,user });
   } catch (e) { next(e); }
 };
 
@@ -44,4 +44,19 @@ export const logout = (req, res) => {
   // Clear cookie with same options so browsers remove it correctly in prod
   res.clearCookie('token', { sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', secure: process.env.NODE_ENV === 'production' });
   res.json({ ok: true });
+};
+
+export const getProfile = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (e) {
+    next(e);
+  }
 };
