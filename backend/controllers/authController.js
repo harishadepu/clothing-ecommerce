@@ -27,12 +27,21 @@ export const login = async (req, res, next) => {
     // merge guest cart logic here...
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    // When app is deployed across different origins (frontend <> backend) we must
+    // set SameSite=None and Secure=true so browsers will include the cookie in
+    // cross-site XHR/fetch requests. In development (localhost) use 'lax'.
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    };
+    res.cookie('token', token, cookieOptions);
     res.json({ id: user._id, name: user.name, email: user.email });
   } catch (e) { next(e); }
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('token');
+  // Clear cookie with same options so browsers remove it correctly in prod
+  res.clearCookie('token', { sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', secure: process.env.NODE_ENV === 'production' });
   res.json({ ok: true });
 };

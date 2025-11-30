@@ -45,7 +45,7 @@ export default function Cart() {
                       <p className="text-gray-600">Size: {i.size}</p>
                       <p className="text-gray-600">Qty: {i.qty}</p>
                       <p className="text-blue-600 font-semibold">
-                        ${i.price}
+                        ${typeof i.price === 'number' ? i.price.toFixed(2) : (i.price || '—')}
                       </p>
                       {/* 💰 Line total for this item */}
                       <p className="text-gray-700">

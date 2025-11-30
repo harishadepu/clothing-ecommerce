@@ -41,16 +41,17 @@ export const CartProvider = ({ children }) => {
 
   // Sync with backend
   const { data } = await api.post("/cart/add", { productId, size, qty });
-  setItems(
-    data.items.map(i => ({
-      productId: i.product._id,
-      name: i.product.name,
-      image: i.product.image,
-      price: i.product.price,
-      size: i.size,
-      qty: i.qty,
-    }))
-  );
+    setItems(
+      data.items.map((i) => {
+        // Support both populated product objects and raw product id values
+        const prod = i.product || {};
+        const productId = prod._id ? String(prod._id) : String(prod);
+        const name = prod.name ?? i.name ?? "";
+        const image = prod.image ?? i.image ?? "";
+        const price = (prod.price ?? i.price) ?? 0;
+        return { productId, name, image, price, size: i.size, qty: i.qty };
+      })
+    );
 };
 
   //
@@ -60,14 +61,14 @@ export const CartProvider = ({ children }) => {
     if (!user) return;
     const { data } = await api.put("/cart/update", { productId, size, qty });
     setItems(
-      data.items.map(i => ({
-        productId: i.product._id,
-        name: i.product.name,
-        image: i.product.image,
-        price: i.product.price,
-        size: i.size,
-        qty: i.qty,
-      }))
+      data.items.map((i) => {
+        const prod = i.product || {};
+        const productId = prod._id ? String(prod._id) : String(prod);
+        const name = prod.name ?? i.name ?? "";
+        const image = prod.image ?? i.image ?? "";
+        const price = (prod.price ?? i.price) ?? 0;
+        return { productId, name, image, price, size: i.size, qty: i.qty };
+      })
     );
   };
 
@@ -81,14 +82,14 @@ export const CartProvider = ({ children }) => {
     const { data } = await api.delete("/cart/remove", { data: { productId, size } });
     console.log("Remove response data:", data);
     setItems(
-      data.items.map(i => ({
-        productId: i.product._id,
-        name: i.product.name,
-        image: i.product.image,
-        price: i.product.price,
-        size: i.size,
-        qty: i.qty,
-      }))
+      data.items.map((i) => {
+        const prod = i.product || {};
+        const productId = prod._id ? String(prod._id) : String(prod);
+        const name = prod.name ?? i.name ?? "";
+        const image = prod.image ?? i.image ?? "";
+        const price = (prod.price ?? i.price) ?? 0;
+        return { productId, name, image, price, size: i.size, qty: i.qty };
+      })
     );
   };
   
